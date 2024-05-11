@@ -1,8 +1,8 @@
 import express from 'express'
-import { getClients } from './client-controller'
+import { getTasks } from './task-controller'
 
 const router = express.Router()
 
-router.get('/clients', getClients)
+router.get('/tasks', getTasks)
 
 export default router

@@ -1,31 +1,29 @@
-import Button from './Button'
+import { IProject } from '../../pages/Projects'
+import Button from '../UI/Button'
 import { MdDelete } from '@react-icons/all-files/md/MdDelete'
 import { MdModeEdit } from '@react-icons/all-files/md/MdModeEdit'
 import { Link } from 'react-router-dom'
 
-const ProjectContainer = () => {
+const ProjectContainer = ({ project }: { project: IProject }) => {
   return (
-    <div className='border border-gray-400 shadow-mainShadow rounded-lg px-4 py-2'>
+    <div className='border border-gray-400 shadow-mainShadow rounded-lg px-4 py-2 h-full'>
       <div className='flex flex-col gap-2'>
         <span>
-          id: <span className='text-mainRed'>2</span>
+          id: <span className='text-mainRed'>{project.id}</span>
         </span>
         <span>
-          name: <span className='text-mainRed'>Majestic</span>
+          name: <span className='text-mainRed'>{project.name}</span>
         </span>
         <div>
           <span>description:</span>
-          <p className='text-sm text-mainRed'>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Est soluta delectus
-            dolor aut expedita ipsum recusandae laudantium ducimus corrupti nihil.
-          </p>
+          <p className='text-sm text-mainRed'>{project.description}</p>
         </div>
         <div className='flex flex-col'>
           <span>
-            Date start: <span className='text-mainRed'>29.04.2024</span>
+            Date start: <span className='text-mainRed'>{project.data_start}</span>
           </span>
           <span>
-            Date end: <span className='text-mainRed'>29.05.2024</span>
+            Date end: <span className='text-mainRed'>{project.data_end}</span>
           </span>
         </div>
       </div>

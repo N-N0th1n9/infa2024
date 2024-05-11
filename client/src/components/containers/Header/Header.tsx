@@ -19,7 +19,6 @@ const Header = () => {
         <Link to='/'>
           DB <span className='text-mainWhite'>IT Project</span>
         </Link>
-        {/* TODO: Highlight the active item with white color */}
         <ul className='flex gap-14'>
           {navList.map(item => (
             <li key={item.path}>

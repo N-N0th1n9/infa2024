@@ -1,7 +1,8 @@
-import EmployeeContainer from '../components/UI/EmployeeContainer'
 import MyForm from '../components/UI/MyForm'
+import EmployeeContainer from '../components/containers/EmployeeContainer'
 import Layout from '../components/containers/Layout'
 import { IFormFields } from '../types/formFields'
+import { useEffect, useState } from 'react'
 
 const fields: IFormFields[] = [
   {
@@ -33,16 +34,46 @@ const fields: IFormFields[] = [
   },
 ]
 
+export interface IEmployee {
+  id: number
+  name: string
+  skills: string[]
+  position: string
+  team_id: number
+  surname: string
+}
+
 const Employee = () => {
+  const [employees, setEmployees] = useState<IEmployee[]>([])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/employees')
+        const data = await response.json()
+        setEmployees(data)
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      }
+    }
+
+    fetchData()
+  }, [])
+
   return (
     <Layout>
       <div className='flex gap-5'>
         <MyForm fields={fields} />
         <div className='grid grid-cols-3 gap-5'>
-          <EmployeeContainer />
-          <EmployeeContainer />
-          <EmployeeContainer />
-          <EmployeeContainer />
+          {employees.length ? (
+            employees.map(employee => (
+              <div key={employee.id}>
+                <EmployeeContainer employee={employee} />
+              </div>
+            ))
+          ) : (
+            <h2 className='mx-auto'>No employees found :(</h2>
+          )}
         </div>
       </div>
     </Layout>

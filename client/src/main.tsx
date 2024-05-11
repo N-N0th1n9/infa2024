@@ -1,3 +1,4 @@
+import { IsOpenModalProvider } from './providers/modalProvider'
 import router from './router/router'
 import './styles/index.css'
 import React from 'react'
@@ -6,6 +7,8 @@ import { RouterProvider } from 'react-router-dom'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <IsOpenModalProvider>
+      <RouterProvider router={router} />
+    </IsOpenModalProvider>
   </React.StrictMode>
 )

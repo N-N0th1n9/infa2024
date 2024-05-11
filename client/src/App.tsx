@@ -1,8 +1,8 @@
-import Header from './components/UI/Header/Header'
-import Footer from './components/UI/containers/Footer'
+import { RouterProvider } from 'react-router-dom'
+import Footer from './components/containers/Footer'
+import Header from './components/containers/Header/Header'
 import router from './router/router'
 import './styles/index.css'
-import { RouterProvider } from 'react-router-dom'
 
 const App = () => {
   return (

@@ -1,8 +1,8 @@
 import express from 'express'
-import { getClients } from './client-controller'
+import { getTeams } from './team-controller'
 
 const router = express.Router()
 
-router.get('/clients', getClients)
+router.get('/teams', getTeams)
 
 export default router

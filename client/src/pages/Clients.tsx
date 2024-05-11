@@ -1,7 +1,9 @@
-import ClientContainer from '../components/UI/ClientContainer'
 import MyForm from '../components/UI/MyForm'
+import ClientContainer from '../components/containers/ClientContainer'
 import Layout from '../components/containers/Layout'
+import { IsOpenModalContext } from '../providers/modalProvider'
 import { IFormFields } from '../types/formFields'
+import { useContext, useEffect, useState } from 'react'
 
 const fields: IFormFields[] = [
   {
@@ -27,32 +29,48 @@ const fields: IFormFields[] = [
   // TODO: it is necessary to routing to the project creation
 ]
 
+export interface IClient {
+  id: number
+  name: string
+  surname: string
+  phone: string
+  email: string
+}
+
 const Clients = () => {
-  fetch('http://localhost:3000/client')
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
+  const [clients, setClients] = useState<IClient[]>([])
+  const { isOpen, setIsOpen } = useContext(IsOpenModalContext)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/clients')
+        const data = await response.json()
+        setClients(data)
+      } catch (error) {
+        console.error('Error fetching data:', error)
       }
-      return response.json()
-    })
-    .then(data => {
-      // Обработка полученных данных
-      console.log(data)
-    })
-    .catch(error => {
-      // Обработка ошибок
-      console.error('Fetch error:', error)
-    })
+    }
+
+    fetchData()
+  }, [])
 
   return (
     <Layout>
       <div className='flex gap-5'>
         <MyForm fields={fields} />
         <div className='flex flex-col gap-5 w-full'>
-          {/* TODO: replace with a list of clients from the database  */}
-          <ClientContainer />
-          <ClientContainer />
+          {clients.length ? (
+            clients.map(client => (
+              <div key={client.id}>
+                <ClientContainer client={client} />
+              </div>
+            ))
+          ) : (
+            <h2 className='mx-auto'>No clients found :(</h2>
+          )}
         </div>
+        {/* <BaseModal isOpen={!isOpen}><ProjectContainer /></BaseModal> */}
       </div>
     </Layout>
   )

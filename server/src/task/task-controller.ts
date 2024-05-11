@@ -1,14 +1,14 @@
 import { QueryTypes } from 'sequelize'
 import sequelize from '../../server'
 
-export const getEmployees = async (req, res) => {
+export const getTasks = async (req, res) => {
   try {
-    const employees = await sequelize.query('SELECT * FROM employee', {
+    const tasks = await sequelize.query('SELECT * FROM task', {
       type: QueryTypes.SELECT,
     })
-    res.json(employees)
+    res.json(tasks)
   } catch (error) {
-    console.error('Error fetching employees:', error)
+    console.error('Error fetching tasks:', error)
     res.status(500).json({ error: 'Internal server error' })
   }
 }
