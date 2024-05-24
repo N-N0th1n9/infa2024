@@ -2,11 +2,24 @@ import { IEmployee } from '../../pages/Employees'
 import Button from '../UI/Button'
 import { MdDelete } from '@react-icons/all-files/md/MdDelete'
 import { MdModeEdit } from '@react-icons/all-files/md/MdModeEdit'
+import { FC } from 'react'
 import { Link } from 'react-router-dom'
 
-const EmployeeContainer = ({ employee }: { employee: IEmployee }) => {
+interface IEmployeeContainer {
+  employee: IEmployee
+  withBtn?: boolean
+  getTeamById?: (id: number) => void
+  getTaskById?: (id: number) => void
+}
+
+const EmployeeContainer: FC<IEmployeeContainer> = ({
+  employee,
+  withBtn = true,
+  getTeamById,
+  getTaskById,
+}) => {
   return (
-    <div className='rounded-lg px-4 py-2 drop-shadow-2xl	border border-gray-400 shadow-mainShadow h-full'>
+    <div className=' rounded-lg px-4 py-2 bg-white	border border-gray-400 shadow-mainShadow h-full flex justify-between flex-col'>
       <div className='flex flex-col gap-2'>
         <span>
           id: <span className='text-mainRed'>{employee.id}</span>
@@ -31,18 +44,22 @@ const EmployeeContainer = ({ employee }: { employee: IEmployee }) => {
       </div>
       <div className='flex items-center justify-between mt-3'>
         <div className='flex gap-3'>
-          <Link to='/project/:id'>
-            <Button
-              text='Team'
-              type='button'
-            />
-          </Link>
-          <Link to='/project/:id'>
-            <Button
-              text='Tasks'
-              type='button'
-            />
-          </Link>
+          {withBtn ? (
+            <>
+              <Button
+                text='Team'
+                type='button'
+                handlerClick={() => getTeamById?.(employee.id)}
+              />
+              <Button
+                text='Tasks'
+                type='button'
+                handlerClick={() => getTaskById?.(employee.id)}
+              />
+            </>
+          ) : (
+            ''
+          )}
         </div>
         <div className='flex gap-4'>
           <Link to='/client/edit/:id'>

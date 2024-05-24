@@ -2,11 +2,22 @@ import { IClient } from '../../pages/Clients'
 import Button from '../UI/Button'
 import { MdDelete } from '@react-icons/all-files/md/MdDelete'
 import { MdModeEdit } from '@react-icons/all-files/md/MdModeEdit'
+import { FC } from 'react'
 import { Link } from 'react-router-dom'
 
-const ClientContainer = ({ client }: { client: IClient }) => {
+interface IClientContainer {
+  client: IClient
+  withBtn?: boolean
+  getProjectById?: (id: number) => void
+}
+
+const ClientContainer: FC<IClientContainer> = ({
+  client,
+  withBtn = true,
+  getProjectById,
+}) => {
   return (
-    <div className='border border-gray-400 rounded-lg px-4 py-2 flex justify-between shadow-mainShadow w-full'>
+    <div className='border border-gray-400 rounded-lg px-4 py-2 flex bg-white justify-between shadow-mainShadow w-full gap-5'>
       <div className='flex items-center gap-10'>
         <span>
           id: <p className='text-mainRed'>{client.id}</p>
@@ -32,12 +43,15 @@ const ClientContainer = ({ client }: { client: IClient }) => {
         </span>
       </div>
       <div className='flex items-center gap-5'>
-        <Link to='/project/:id'>
+        {withBtn ? (
           <Button
             text='Go to project'
             type='button'
+            handlerClick={() => getProjectById?.(client.id)}
           />
-        </Link>
+        ) : (
+          ''
+        )}
         <Link to='/client/edit/:id'>
           <MdModeEdit size={27} />
         </Link>

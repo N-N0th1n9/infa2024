@@ -2,10 +2,21 @@ import { IFormFields } from '../../types/formFields'
 import Button from './Button'
 import { ErrorMessage, Field, Form, Formik } from 'formik'
 
+interface IInitialValue {
+  [key: string]: string
+}
+
 const MyForm = ({ fields }: { fields: IFormFields[] }) => {
+  const initialValues: IInitialValue = fields.reduce((acc, field) => {
+    acc[field.name] = ''
+    return acc
+  }, {} as IInitialValue)
+
+  console.log(initialValues)
+
   return (
     <Formik
-      initialValues={{ name: '', surname: '', phone: '', email: '' }}
+      initialValues={initialValues}
       onSubmit={values => {
         alert(JSON.stringify(values, null, 2))
       }}

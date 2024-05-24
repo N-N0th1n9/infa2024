@@ -2,11 +2,18 @@ import { ITeam } from '../../pages/Teams'
 import Button from '../UI/Button'
 import { MdDelete } from '@react-icons/all-files/md/MdDelete'
 import { MdModeEdit } from '@react-icons/all-files/md/MdModeEdit'
+import { FC } from 'react'
 import { Link } from 'react-router-dom'
 
-const TeamContainer = ({ team }: { team: ITeam }) => {
+interface ITaskContainer {
+  team: ITeam
+  withBtn?: boolean
+  getProjectById?: (id: number) => void
+}
+
+const TeamContainer: FC<ITaskContainer> = ({ team, withBtn = true, getProjectById }) => {
   return (
-    <div className='border border-gray-400 shadow-mainShadow rounded-lg px-4 py-2 flex justify-between'>
+    <div className='border border-gray-400 bg-white shadow-mainShadow rounded-lg px-4 py-2 flex justify-between gap-5'>
       <div className='flex gap-5 items-center'>
         <span>
           id: <span className='text-mainRed'>{team.id}</span>
@@ -20,12 +27,15 @@ const TeamContainer = ({ team }: { team: ITeam }) => {
         </span>
       </div>
       <div className='flex items-center gap-6'>
-        <Link to='/project/:id'>
+        {withBtn ? (
           <Button
             text='Go to project'
             type='button'
+            handlerClick={() => getProjectById?.(team.id)}
           />
-        </Link>
+        ) : (
+          ''
+        )}
         <Link to='/client/edit/:id'>
           <MdModeEdit size={27} />
         </Link>

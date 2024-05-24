@@ -1,8 +1,14 @@
+import BaseModal from '../components/UI/BaseModal'
 import MyForm from '../components/UI/MyForm'
 import EmployeeContainer from '../components/containers/EmployeeContainer'
 import Layout from '../components/containers/Layout'
+import TaskContainer from '../components/containers/TaskContainer'
+import TeamContainer from '../components/containers/TeamContainer'
+import { IsOpenModalContext } from '../providers/modalProvider'
 import { IFormFields } from '../types/formFields'
-import { useEffect, useState } from 'react'
+import { ITask } from './Tasks'
+import { ITeam } from './Teams'
+import { useContext, useEffect, useState } from 'react'
 
 const fields: IFormFields[] = [
   {
@@ -45,6 +51,9 @@ export interface IEmployee {
 
 const Employee = () => {
   const [employees, setEmployees] = useState<IEmployee[]>([])
+  const [team, setTeam] = useState<ITeam | null>(null)
+  const [tasks, setTasks] = useState<ITask[] | null>(null)
+  const { setIsOpen } = useContext(IsOpenModalContext)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,6 +69,33 @@ const Employee = () => {
     fetchData()
   }, [])
 
+  const getTeamById = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:3000/team/${id}`)
+      const data = await response.json()
+
+      setTeam(data[0])
+      setTasks(null)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    }
+    setIsOpen(true)
+  }
+
+  const getTaskById = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:3000/tasks/${id}`)
+      const data = await response.json()
+
+      console.log(data)
+      setTasks(data)
+      setTeam(null)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    }
+    setIsOpen(true)
+  }
+
   return (
     <Layout>
       <div className='flex gap-5'>
@@ -68,13 +104,35 @@ const Employee = () => {
           {employees.length ? (
             employees.map(employee => (
               <div key={employee.id}>
-                <EmployeeContainer employee={employee} />
+                <EmployeeContainer
+                  employee={employee}
+                  getTeamById={getTeamById}
+                  getTaskById={getTaskById}
+                />
               </div>
             ))
           ) : (
             <h2 className='mx-auto'>No employees found :(</h2>
           )}
         </div>
+        <BaseModal>
+          {team !== null && (
+            <TeamContainer
+              team={team}
+              withBtn={false}
+            />
+          )}
+          {tasks !== null && (
+            <div className='grid grid-cols-3 gap-5'>
+              {tasks.map(task => (
+                <TaskContainer
+                  task={task}
+                  withBtn={false}
+                />
+              ))}
+            </div>
+          )}
+        </BaseModal>
       </div>
     </Layout>
   )

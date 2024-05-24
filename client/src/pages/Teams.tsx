@@ -1,8 +1,12 @@
+import BaseModal from '../components/UI/BaseModal'
 import MyForm from '../components/UI/MyForm'
 import Layout from '../components/containers/Layout'
+import ProjectContainer from '../components/containers/ProjectContainer'
 import TeamContainer from '../components/containers/TeamContainer'
+import { IsOpenModalContext } from '../providers/modalProvider'
 import { IFormFields } from '../types/formFields'
-import { useEffect, useState } from 'react'
+import { IProject } from './Projects'
+import { useContext, useEffect, useState } from 'react'
 
 const fields: IFormFields[] = [
   {
@@ -30,6 +34,8 @@ export interface ITeam {
 
 const Teams = () => {
   const [teams, setTeams] = useState<ITeam[]>([])
+  const [projects, setProjects] = useState<IProject[] | null>(null)
+  const { setIsOpen } = useContext(IsOpenModalContext)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,6 +51,18 @@ const Teams = () => {
     fetchData()
   }, [])
 
+  const getProjectById = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:3000/project/team/${id}`)
+      const data = await response.json()
+
+      setProjects(data)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    }
+    setIsOpen(true)
+  }
+
   return (
     <Layout>
       <div className='flex gap-5'>
@@ -53,7 +71,10 @@ const Teams = () => {
           {teams.length ? (
             teams.map(team => (
               <div key={team.id}>
-                <TeamContainer team={team} />
+                <TeamContainer
+                  team={team}
+                  getProjectById={getProjectById}
+                />
               </div>
             ))
           ) : (
@@ -61,6 +82,19 @@ const Teams = () => {
           )}
         </div>
       </div>
+      <BaseModal>
+        {projects !== null && (
+          <div className='grid grid-cols-3 gap-5'>
+            {projects.map(project => (
+              <ProjectContainer
+                project={project}
+                withBtn={false}
+                getClientById={getProjectById}
+              />
+            ))}
+          </div>
+        )}
+      </BaseModal>
     </Layout>
   )
 }

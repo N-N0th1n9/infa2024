@@ -1,17 +1,12 @@
 import { IsOpenModalContext } from '../../providers/modalProvider'
-import { FC, ReactNode, useContext } from 'react'
+import { ReactNode, useContext } from 'react'
 
-interface IBaseModal {
-  children: ReactNode
-  isOpen: boolean
-}
-
-const BaseModal: FC<IBaseModal> = ({ children, isOpen }) => {
-  const { setIsOpen } = useContext(IsOpenModalContext)
+const BaseModal = ({ children }: { children: ReactNode }) => {
+  const { isOpen, setIsOpen } = useContext(IsOpenModalContext)
 
   const closeModal = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     e.preventDefault()
-    setIsOpen(true)
+    setIsOpen(false)
   }
 
   return (
@@ -20,7 +15,7 @@ const BaseModal: FC<IBaseModal> = ({ children, isOpen }) => {
       onClick={closeModal}
     >
       <div
-        className='bg-white m-auto mt-[430px] rounded-lg'
+        className='m-auto mt-[350px] rounded-lg'
         onClick={e => e.stopPropagation()}
       >
         {children}
