@@ -31,3 +31,51 @@ export const getClientByProjectId = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+export const deleteClient = async (req, res) => {
+  const transaction = await sequelize.transaction()
+  try {
+    const clientId = req.params.id
+
+    await sequelize.query(
+      `DELETE FROM project_team WHERE project_id IN (
+        SELECT project_id FROM project_client WHERE client_id = :clientId
+      )`,
+      {
+        replacements: { clientId },
+        type: QueryTypes.DELETE,
+        transaction,
+      }
+    )
+
+    await sequelize.query(
+      `DELETE FROM project_client WHERE client_id = :clientId`,
+      {
+        replacements: { clientId },
+        type: QueryTypes.DELETE,
+        transaction,
+      }
+    )
+
+    const result = await sequelize.query(
+      `DELETE FROM client WHERE id = :clientId`,
+      {
+        replacements: { clientId },
+        type: QueryTypes.DELETE,
+        transaction,
+      }
+    )
+
+    if (result[0] === 0) {
+      await transaction.rollback()
+      return res.status(404).json({ error: 'Client not found' })
+    }
+
+    await transaction.commit()
+    res.status(200).json({ message: 'Client deleted successfully' })
+  } catch (error) {
+    await transaction.rollback()
+    console.error('Error deleting client:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}

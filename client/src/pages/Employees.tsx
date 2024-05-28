@@ -1,5 +1,5 @@
 import BaseModal from '../components/UI/BaseModal'
-import MyForm from '../components/UI/MyForm'
+import MyForm, { IInitialValue } from '../components/UI/MyForm'
 import EmployeeContainer from '../components/containers/EmployeeContainer'
 import Layout from '../components/containers/Layout'
 import TaskContainer from '../components/containers/TaskContainer'
@@ -29,9 +29,9 @@ const fields: IFormFields[] = [
   },
   // TODO: Create a selection list for team(Of all the teams in the database.)
   {
-    name: 'teamId',
+    name: 'team_id',
     type: 'text',
-    label: 'Team ID*',
+    label: 'Team ID',
   },
   {
     name: 'skills',
@@ -87,7 +87,6 @@ const Employee = () => {
       const response = await fetch(`http://localhost:3000/tasks/${id}`)
       const data = await response.json()
 
-      console.log(data)
       setTasks(data)
       setTeam(null)
     } catch (error) {
@@ -96,11 +95,52 @@ const Employee = () => {
     setIsOpen(true)
   }
 
+  const createEmployee = async (values: IInitialValue) => {
+    await fetch('http://localhost:3000/employee/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(values),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok')
+        }
+        console.log(response)
+        return response.json()
+      })
+      .then(data => {
+        console.log('Success:', data)
+      })
+      .catch(error => {
+        console.error('Error:', error)
+      })
+  }
+
+  const deleteEmployee = async (id: number) => {
+    try {
+      await fetch(`http://localhost:3000/employee/delete/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      setEmployees(prevEmployees => prevEmployees.filter(employee => employee.id !== id))
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
   return (
     <Layout>
       <div className='flex gap-5'>
-        <MyForm fields={fields} />
-        <div className='grid grid-cols-3 gap-5'>
+        <MyForm
+          fields={fields}
+          onSubmit={createEmployee}
+        />
+        <div className='grid grid-cols-3 gap-5 w-full'>
           {employees.length ? (
             employees.map(employee => (
               <div key={employee.id}>
@@ -108,6 +148,7 @@ const Employee = () => {
                   employee={employee}
                   getTeamById={getTeamById}
                   getTaskById={getTaskById}
+                  deleteEmployee={deleteEmployee}
                 />
               </div>
             ))
@@ -125,10 +166,12 @@ const Employee = () => {
           {tasks !== null && (
             <div className='grid grid-cols-3 gap-5'>
               {tasks.map(task => (
-                <TaskContainer
-                  task={task}
-                  withBtn={false}
-                />
+                <div key={task.id}>
+                  <TaskContainer
+                    task={task}
+                    withBtn={false}
+                  />
+                </div>
               ))}
             </div>
           )}

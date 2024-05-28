@@ -147,3 +147,50 @@ export const createProject = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+export const deleteProject = async (req, res) => {
+  const transaction = await sequelize.transaction()
+  try {
+    const projectId = req.params.id
+
+    await sequelize.query(
+      `DELETE FROM project_team WHERE project_id = :projectId`,
+      {
+        replacements: { projectId },
+        type: QueryTypes.DELETE,
+        transaction,
+      }
+    )
+
+    await sequelize.query(
+      `DELETE FROM project_client WHERE project_id = :projectId`,
+      {
+        replacements: { projectId },
+        type: QueryTypes.DELETE,
+        transaction,
+      }
+    )
+
+    const result = await sequelize.query(
+      `DELETE FROM project WHERE id = :projectId`,
+      {
+        replacements: { projectId },
+        type: QueryTypes.DELETE,
+        transaction,
+      }
+    )
+    //Тут также выполняется триггер для удаления всех клиентов, не связанных с project_client
+
+    if (result[0] === 0) {
+      await transaction.rollback()
+      return res.status(404).json({ error: 'Project not found' })
+    }
+
+    await transaction.commit()
+    res.status(200).json({ message: 'Project deleted successfully' })
+  } catch (error) {
+    await transaction.rollback()
+    console.error('Error deleting project:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}

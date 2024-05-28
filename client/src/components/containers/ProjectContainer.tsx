@@ -3,18 +3,21 @@ import Button from '../UI/Button'
 import { MdDelete } from '@react-icons/all-files/md/MdDelete'
 import { MdModeEdit } from '@react-icons/all-files/md/MdModeEdit'
 import { FC } from 'react'
-import { Link } from 'react-router-dom'
 
 interface IClientContainer {
   project: IProject
   withBtn?: boolean
   getClientById?: (id: number) => void
+  deleteProject?: (id: number) => void
 }
+
+//TODO: надо что-то придумать с deleteProject для модалки.
 
 const ProjectContainer: FC<IClientContainer> = ({
   project,
   withBtn = true,
   getClientById,
+  deleteProject,
 }) => {
   return (
     <div className='border border-gray-400 bg-white shadow-mainShadow rounded-lg px-4 py-2 h-full flex justify-between flex-col'>
@@ -49,11 +52,14 @@ const ProjectContainer: FC<IClientContainer> = ({
           ''
         )}
         <div className='flex gap-4'>
-          <Link to='/client/edit/:id'>
-            <MdModeEdit size={27} />
-          </Link>
           <button>
-            <MdDelete size={27} />
+            <MdModeEdit size={27} />
+          </button>
+          <button>
+            <MdDelete
+              size={27}
+              onClick={() => deleteProject?.(project.id)}
+            />
           </button>
         </div>
       </div>

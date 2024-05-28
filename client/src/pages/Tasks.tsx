@@ -1,5 +1,5 @@
 import BaseModal from '../components/UI/BaseModal'
-import MyForm from '../components/UI/MyForm'
+import MyForm, { IInitialValue } from '../components/UI/MyForm'
 import EmployeeContainer from '../components/containers/EmployeeContainer'
 import Layout from '../components/containers/Layout'
 import ProjectContainer from '../components/containers/ProjectContainer'
@@ -17,9 +17,14 @@ const fields: IFormFields[] = [
     label: 'Description*',
   },
   {
-    name: 'projectId',
+    name: 'project_id',
     type: 'text',
     label: 'Project ID*',
+  },
+  {
+    name: 'employee_id',
+    type: 'text',
+    label: 'Employee ID*',
   },
 ]
 
@@ -27,8 +32,8 @@ export interface ITask {
   id: number
   description: string
   status: string
-  data_start: number
-  data_end: number
+  date_start: number
+  date_end: number
   project_id: number
 }
 
@@ -70,7 +75,6 @@ const Tasks = () => {
       const response = await fetch(`http://localhost:3000/employees/task/${id}`)
       const data = await response.json()
 
-      console.log(data)
       setEmployee(data[0])
       setProject(null)
     } catch (error) {
@@ -79,10 +83,51 @@ const Tasks = () => {
     setIsOpen(true)
   }
 
+  const createTask = async (values: IInitialValue) => {
+    await fetch('http://localhost:3000/task/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(values),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Network response was not ok`)
+        }
+        console.log(response)
+        return response.json()
+      })
+      .then(data => {
+        console.log('Success:', data)
+      })
+      .catch(error => {
+        console.error('Error:', error)
+      })
+  }
+
+  const deleteTask = async (id: number) => {
+    try {
+      await fetch(`http://localhost:3000/task/delete/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      setTasks(prevTasks => prevTasks.filter(task => task.id !== id))
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
   return (
     <Layout>
       <div className='flex gap-5'>
-        <MyForm fields={fields} />
+        <MyForm
+          fields={fields}
+          onSubmit={createTask}
+        />
         <div className='grid grid-cols-3 gap-5 w-full'>
           {tasks.length ? (
             tasks.map(task => (
@@ -91,6 +136,7 @@ const Tasks = () => {
                   task={task}
                   getProjectById={getProjectById}
                   getEmployeeById={getEmployeeById}
+                  deleteTask={deleteTask}
                 />
               </div>
             ))

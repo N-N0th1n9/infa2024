@@ -10,6 +10,7 @@ interface ITaskContainer {
   withBtn?: boolean
   getProjectById?: (id: number) => void
   getEmployeeById?: (id: number) => void
+  deleteTask?: (id: number) => void
 }
 
 const TaskContainer: FC<ITaskContainer> = ({
@@ -17,6 +18,7 @@ const TaskContainer: FC<ITaskContainer> = ({
   withBtn = true,
   getProjectById,
   getEmployeeById,
+  deleteTask,
 }) => {
   return (
     <div className='border border-gray-400 shadow-mainShadow bg-white rounded-lg px-4 py-2 h-full'>
@@ -33,10 +35,10 @@ const TaskContainer: FC<ITaskContainer> = ({
           status: <span className='text-mainRed'>{task.status}</span>
         </span>
         <span>
-          Date start: <span className='text-mainRed'>{task.data_start}</span>
+          Date start: <span className='text-mainRed'>{task.date_start}</span>
         </span>
         <span>
-          Date end: <span className='text-mainRed'>{task.data_end}</span>
+          Date end: <span className='text-mainRed'>{task.date_end}</span>
         </span>
       </div>
       <div className='flex items-center justify-between mt-3'>
@@ -58,7 +60,7 @@ const TaskContainer: FC<ITaskContainer> = ({
           <Link to='/client/edit/:id'>
             <MdModeEdit size={27} />
           </Link>
-          <button>
+          <button onClick={() => deleteTask?.(task.id)}>
             <MdDelete size={27} />
           </button>
         </div>

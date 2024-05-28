@@ -9,9 +9,17 @@ interface ITaskContainer {
   team: ITeam
   withBtn?: boolean
   getProjectById?: (id: number) => void
+  getEmployeesById?: (id: number) => void
+  deleteTeam?: (id: number) => void
 }
 
-const TeamContainer: FC<ITaskContainer> = ({ team, withBtn = true, getProjectById }) => {
+const TeamContainer: FC<ITaskContainer> = ({
+  team,
+  withBtn = true,
+  getProjectById,
+  getEmployeesById,
+  deleteTeam,
+}) => {
   return (
     <div className='border border-gray-400 bg-white shadow-mainShadow rounded-lg px-4 py-2 flex justify-between gap-5'>
       <div className='flex gap-5 items-center'>
@@ -28,18 +36,25 @@ const TeamContainer: FC<ITaskContainer> = ({ team, withBtn = true, getProjectByI
       </div>
       <div className='flex items-center gap-6'>
         {withBtn ? (
-          <Button
-            text='Go to project'
-            type='button'
-            handlerClick={() => getProjectById?.(team.id)}
-          />
+          <>
+            <Button
+              text='Go to project'
+              type='button'
+              handlerClick={() => getProjectById?.(team.id)}
+            />
+            <Button
+              text='Employees'
+              type='button'
+              handlerClick={() => getEmployeesById?.(team.id)}
+            />
+          </>
         ) : (
           ''
         )}
         <Link to='/client/edit/:id'>
           <MdModeEdit size={27} />
         </Link>
-        <button>
+        <button onClick={() => deleteTeam?.(team.id)}>
           <MdDelete size={27} />
         </button>
       </div>

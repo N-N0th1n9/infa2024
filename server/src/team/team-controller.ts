@@ -90,3 +90,50 @@ export const createTeam = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+export const deleteTeam = async (req, res) => {
+  const transaction = await sequelize.transaction()
+  try {
+    const teamId = req.params.id
+
+    await sequelize.query(`DELETE FROM project_team WHERE team_id = :teamId`, {
+      replacements: { teamId },
+      type: QueryTypes.DELETE,
+      transaction,
+    })
+
+    await sequelize.query(
+      `UPDATE employee 
+      SET team_id = NULL
+      WHERE team_id IN (
+        SELECT team_id FROM employee WHERE team_id = :teamId
+      )`,
+      {
+        replacements: { teamId },
+        type: QueryTypes.DELETE,
+        transaction,
+      }
+    )
+
+    const result = await sequelize.query(
+      `DELETE FROM team WHERE id = :teamId`,
+      {
+        replacements: { teamId },
+        type: QueryTypes.DELETE,
+        transaction,
+      }
+    )
+
+    if (result[0] === 0) {
+      await transaction.rollback()
+      return res.status(404).json({ error: 'Team not found' })
+    }
+
+    await transaction.commit()
+    res.status(200).json({ message: 'Team deleted successfully' })
+  } catch (error) {
+    await transaction.rollback()
+    console.error('Error deleting team:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}

@@ -47,6 +47,21 @@ const Clients = () => {
     setIsOpen(true)
   }
 
+  const deleteClient = async (id: number) => {
+    try {
+      await fetch(`http://localhost:3000/client/delete/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      setClients(prevClients => prevClients.filter(client => client.id !== id))
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
   return (
     <Layout>
       <div className='flex gap-5'>
@@ -56,13 +71,14 @@ const Clients = () => {
             type='button'
           />
         </Link>
-        <div className='flex flex-col gap-5 w-full'>
+        <div className='flex flex-col gap-5'>
           {clients.length ? (
             clients.map(client => (
               <div key={client.id}>
                 <ClientContainer
                   client={client}
                   getProjectById={getProjectById}
+                  deleteClient={deleteClient}
                 />
               </div>
             ))

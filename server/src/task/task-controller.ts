@@ -74,3 +74,37 @@ export const createTask = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+export const deleteTask = async (req, res) => {
+  const transaction = await sequelize.transaction()
+  try {
+    const taskId = req.params.id
+
+    await sequelize.query(`DELETE FROM task_employee WHERE task_id = :taskId`, {
+      replacements: { taskId },
+      type: QueryTypes.DELETE,
+      transaction,
+    })
+
+    const result = await sequelize.query(
+      `DELETE FROM task WHERE id = :taskId`,
+      {
+        replacements: { taskId },
+        type: QueryTypes.DELETE,
+        transaction,
+      }
+    )
+
+    if (result[0] === 0) {
+      await transaction.rollback()
+      return res.status(404).json({ error: 'Task not found' })
+    }
+
+    await transaction.commit()
+    res.status(200).json({ message: 'Task deleted successfully' })
+  } catch (error) {
+    await transaction.rollback()
+    console.error('Error deleting task:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}

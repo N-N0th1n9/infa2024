@@ -9,12 +9,14 @@ interface IClientContainer {
   client: IClient
   withBtn?: boolean
   getProjectById?: (id: number) => void
+  deleteClient?: (id: number) => void
 }
 
 const ClientContainer: FC<IClientContainer> = ({
   client,
   withBtn = true,
   getProjectById,
+  deleteClient,
 }) => {
   return (
     <div className='border border-gray-400 rounded-lg px-4 py-2 flex bg-white justify-between shadow-mainShadow w-full gap-5'>
@@ -55,7 +57,7 @@ const ClientContainer: FC<IClientContainer> = ({
         <Link to='/client/edit/:id'>
           <MdModeEdit size={27} />
         </Link>
-        <button>
+        <button onClick={() => deleteClient?.(client.id)}>
           <MdDelete size={27} />
         </button>
       </div>
