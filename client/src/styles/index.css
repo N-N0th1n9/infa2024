@@ -21,11 +21,16 @@
     flex-grow: 1;
   }
 
-  input {
+  input,
+  select {
     border: 1px solid black;
     border-radius: 0.5rem;
     width: 100%;
     padding: 0 7px;
+  }
+
+  select {
+    padding: 2px 3px;
   }
 
   input:-webkit-autofill,

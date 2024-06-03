@@ -4,29 +4,19 @@ import EmployeeContainer from '../components/containers/EmployeeContainer'
 import Layout from '../components/containers/Layout'
 import ProjectContainer from '../components/containers/ProjectContainer'
 import TaskContainer from '../components/containers/TaskContainer'
+import { useTasks } from '../hooks/useTasks'
 import { IsOpenModalContext } from '../providers/modalProvider'
-import { IFormFields } from '../types/formFields'
-import { IEmployee } from './Employees'
-import { IProject } from './Projects'
-import { useContext, useEffect, useState } from 'react'
+import { useContext } from 'react'
+import * as Yup from 'yup'
 
-const fields: IFormFields[] = [
-  {
-    name: 'description',
-    type: 'text',
-    label: 'Description*',
-  },
-  {
-    name: 'project_id',
-    type: 'text',
-    label: 'Project ID*',
-  },
-  {
-    name: 'employee_id',
-    type: 'text',
-    label: 'Employee ID*',
-  },
-]
+const TasksValidSchema = Yup.object().shape({
+  description: Yup.string()
+    .min(2, 'Too Short!')
+    .max(256, 'Too Long!')
+    .required('Required'),
+  project_id: Yup.string().required('Required'),
+  employee_id: Yup.string().required('Required'),
+})
 
 export interface ITask {
   id: number
@@ -38,95 +28,54 @@ export interface ITask {
 }
 
 const Tasks = () => {
-  const [tasks, setTasks] = useState<ITask[]>([])
-  const [project, setProject] = useState<IProject | null>(null)
-  const [employee, setEmployee] = useState<IEmployee | null>(null)
   const { setIsOpen } = useContext(IsOpenModalContext)
+  const {
+    tasks,
+    project,
+    employee,
+    isLoading,
+    // error,
+    taskInputFields,
+    getProject,
+    getEmployee,
+    createNewTask,
+    removeTask,
+  } = useTasks()
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/tasks')
-        const data = await response.json()
-        setTasks(data)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      }
-    }
-
-    fetchData()
-  }, [])
-
-  const getProjectById = async (id: number) => {
-    try {
-      const response = await fetch(`http://localhost:3000/project/task/${id}`)
-      const data = await response.json()
-
-      setProject(data[0])
-      setEmployee(null)
-    } catch (error) {
-      console.error('Error fetching data:', error)
-    }
-    setIsOpen(true)
-  }
-
-  const getEmployeeById = async (id: number) => {
-    try {
-      const response = await fetch(`http://localhost:3000/employees/task/${id}`)
-      const data = await response.json()
-
-      setEmployee(data[0])
-      setProject(null)
-    } catch (error) {
-      console.error('Error fetching data:', error)
-    }
-    setIsOpen(true)
-  }
-
-  const createTask = async (values: IInitialValue) => {
-    await fetch('http://localhost:3000/task/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(values),
+  const handleGetProjectById = async (id: number) => {
+    await getProject(id)
+    setIsOpen({
+      base: true,
+      edit: false,
     })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Network response was not ok`)
-        }
-        console.log(response)
-        return response.json()
-      })
-      .then(data => {
-        console.log('Success:', data)
-      })
-      .catch(error => {
-        console.error('Error:', error)
-      })
   }
 
-  const deleteTask = async (id: number) => {
-    try {
-      await fetch(`http://localhost:3000/task/delete/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      setTasks(prevTasks => prevTasks.filter(task => task.id !== id))
-    } catch (error) {
-      console.error('Error:', error)
-    }
+  const handleGetEmployeeById = async (id: number) => {
+    await getEmployee(id)
+    setIsOpen({
+      base: true,
+      edit: false,
+    })
   }
+
+  const handleCreateTask = async (values: IInitialValue) => {
+    await createNewTask(values)
+  }
+
+  const handleDeleteTask = async (id: number) => {
+    await removeTask(id)
+  }
+
+  if (isLoading) return <div>Loading...</div>
+  // if (error) return <div>Error: {error.message}</div>;
 
   return (
     <Layout>
       <div className='flex gap-5'>
         <MyForm
-          fields={fields}
-          onSubmit={createTask}
+          fields={taskInputFields}
+          onSubmit={handleCreateTask}
+          ValidationSchema={TasksValidSchema}
         />
         <div className='grid grid-cols-3 gap-5 w-full'>
           {tasks.length ? (
@@ -134,9 +83,9 @@ const Tasks = () => {
               <div key={task.id}>
                 <TaskContainer
                   task={task}
-                  getProjectById={getProjectById}
-                  getEmployeeById={getEmployeeById}
-                  deleteTask={deleteTask}
+                  getProjectById={handleGetProjectById}
+                  getEmployeeById={handleGetEmployeeById}
+                  deleteTask={handleDeleteTask}
                 />
               </div>
             ))

@@ -32,6 +32,25 @@ export const getTeamByEmployeeId = async (req, res) => {
   }
 }
 
+export const getTeamByProjectId = async (req, res) => {
+  try {
+    const projectId = req.params.projectId
+    const team = await sequelize.query(
+      `SELECT team.* 
+      FROM team 
+      JOIN project_team ON project_team.team_id = team.id  
+      WHERE project_team.projectId = ${projectId}`,
+      {
+        type: QueryTypes.SELECT,
+      }
+    )
+    res.json(team)
+  } catch (error) {
+    console.error('Error fetching team:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
 export const createTeam = async (req, res) => {
   const transaction = await sequelize.transaction()
   try {

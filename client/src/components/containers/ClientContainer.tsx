@@ -47,7 +47,7 @@ const ClientContainer: FC<IClientContainer> = ({
       <div className='flex items-center gap-5'>
         {withBtn ? (
           <Button
-            text='Go to project'
+            text='Project'
             type='button'
             handlerClick={() => getProjectById?.(client.id)}
           />

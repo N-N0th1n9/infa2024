@@ -4,29 +4,18 @@ import EmployeeContainer from '../components/containers/EmployeeContainer'
 import Layout from '../components/containers/Layout'
 import ProjectContainer from '../components/containers/ProjectContainer'
 import TeamContainer from '../components/containers/TeamContainer'
+import { useTeams } from '../hooks/useTeams'
 import { IsOpenModalContext } from '../providers/modalProvider'
-import { IFormFields } from '../types/formFields'
 import { IEmployee } from './Employees'
 import { IProject } from './Projects'
-import { useContext, useEffect, useState } from 'react'
+import { useContext } from 'react'
+import * as Yup from 'yup'
 
-const fields: IFormFields[] = [
-  {
-    name: 'role',
-    type: 'text',
-    label: 'Role*',
-  },
-  {
-    name: 'teamlead_id',
-    type: 'text',
-    label: 'TeamLead ID*',
-  },
-  {
-    name: 'project_id',
-    type: 'text',
-    label: 'Project ID*',
-  },
-]
+const TeamValidSchema = Yup.object().shape({
+  role: Yup.string().required('Required'),
+  teamlead_id: Yup.string().required('Required'),
+  project_id: Yup.string().required('Required'),
+})
 
 export interface ITeam {
   id: number
@@ -35,95 +24,54 @@ export interface ITeam {
 }
 
 const Teams = () => {
-  const [teams, setTeams] = useState<ITeam[]>([])
-  const [projects, setProjects] = useState<IProject[] | null>(null)
-  const [employees, setEmployees] = useState<IEmployee[] | null>(null)
+  const {
+    teams,
+    projects,
+    employees,
+    isLoading,
+    // error,
+    teamInputFields,
+    getProject,
+    getEmployee,
+    createNewTeam,
+    removeTeam,
+  } = useTeams()
   const { setIsOpen } = useContext(IsOpenModalContext)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/teams')
-        const data = await response.json()
-        setTeams(data)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      }
-    }
-
-    fetchData()
-  }, [])
-
-  const getProjectById = async (id: number) => {
-    try {
-      const response = await fetch(`http://localhost:3000/project/team/${id}`)
-      const data = await response.json()
-
-      setProjects(data)
-      setEmployees(null)
-    } catch (error) {
-      console.error('Error fetching data:', error)
-    }
-    setIsOpen(true)
-  }
-
-  const getEmployeesById = async (id: number) => {
-    try {
-      const response = await fetch(`http://localhost:3000/employees/team/${id}`)
-      const data = await response.json()
-
-      setEmployees(data)
-      setProjects(null)
-    } catch (error) {
-      console.error('Error fetching data:', error)
-    }
-    setIsOpen(true)
-  }
-
-  const createTeam = async (values: IInitialValue) => {
-    await fetch('http://localhost:3000/team/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(values),
+  const handleGetProjectById = async (id: number) => {
+    await getProject(id)
+    setIsOpen({
+      base: true,
+      edit: false,
     })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Network response was not ok`)
-        }
-        console.log(response)
-        return response.json()
-      })
-      .then(data => {
-        console.log('Success:', data)
-      })
-      .catch(error => {
-        console.error('Error:', error)
-      })
   }
 
-  const deleteTeam = async (id: number) => {
-    try {
-      await fetch(`http://localhost:3000/team/delete/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      setTeams(prevTeams => prevTeams.filter(team => team.id !== id))
-    } catch (error) {
-      console.error('Error:', error)
-    }
+  const handleGetEmployeeById = async (id: number) => {
+    await getEmployee(id)
+    setIsOpen({
+      base: true,
+      edit: false,
+    })
   }
+
+  const handleCreateTeam = async (values: IInitialValue) => {
+    await createNewTeam(values)
+  }
+
+  const handleDeleteTeam = async (id: number) => {
+    await removeTeam(id)
+  }
+
+  if (isLoading) return <div>Loading...</div>
+  // if (error) return <div>Error: {error.message}</div>;
 
   return (
     <Layout>
       <div className='flex gap-5'>
         <MyForm
-          fields={fields}
-          onSubmit={createTeam}
+          fields={teamInputFields}
+          onSubmit={handleCreateTeam}
+          ValidationSchema={TeamValidSchema}
         />
         <div className='flex flex-col gap-5 w-full'>
           {teams.length ? (
@@ -131,9 +79,9 @@ const Teams = () => {
               <div key={team.id}>
                 <TeamContainer
                   team={team}
-                  getProjectById={getProjectById}
-                  getEmployeesById={getEmployeesById}
-                  deleteTeam={deleteTeam}
+                  getProjectById={handleGetProjectById}
+                  getEmployeesById={handleGetEmployeeById}
+                  deleteTeam={handleDeleteTeam}
                 />
               </div>
             ))

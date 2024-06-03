@@ -1,5 +1,7 @@
 export interface IFormFields {
   name: string
-  type: string
-  label: string
+  type?: 'text' | 'select' | 'email' | 'date'
+  label?: string
+  options?: string[]
+  value?: string
 }

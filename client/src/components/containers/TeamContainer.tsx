@@ -38,7 +38,7 @@ const TeamContainer: FC<ITaskContainer> = ({
         {withBtn ? (
           <>
             <Button
-              text='Go to project'
+              text='Project'
               type='button'
               handlerClick={() => getProjectById?.(team.id)}
             />

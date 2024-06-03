@@ -12,3 +12,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </IsOpenModalProvider>
   </React.StrictMode>
 )
+
+// TODO: 2) Реализовать редактирование
+// TODO: 3) Сделать на фронте вызов хранимой процедуры (вроде это добавление + указанного кол-ва дней для незавершенных проектов в project или это в task)
+// TODO: 8) Из=за того, что обновляется isLoading происходит рывок, надо фиксить.
+// добавить completed к задачам и таскам

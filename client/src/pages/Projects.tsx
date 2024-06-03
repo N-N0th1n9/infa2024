@@ -3,49 +3,48 @@ import MyForm, { IInitialValue } from '../components/UI/MyForm'
 import ClientContainer from '../components/containers/ClientContainer'
 import Layout from '../components/containers/Layout'
 import ProjectContainer from '../components/containers/ProjectContainer'
+import { useProjects } from '../hooks/useProjects'
 import { IsOpenModalContext } from '../providers/modalProvider'
 import { IFormFields } from '../types/formFields'
 import { IClient } from './Clients'
-import { useContext, useEffect, useState } from 'react'
+import { useCallback, useContext } from 'react'
+import * as Yup from 'yup'
 
-const fields: IFormFields[] = [
+const ProjectValidSchema = Yup.object().shape({
+  name: Yup.string().min(2, 'Too Short!').max(50, 'Too Long!').required('Required'),
+  description: Yup.string().min(2, 'Too Short!').max(256, 'Too Long!'),
+  client_name: Yup.string()
+    .min(2, 'Too Short!')
+    .max(50, 'Too Long!')
+    .required('Required'),
+  client_surname: Yup.string()
+    .min(2, 'Too Short!')
+    .max(50, 'Too Long!')
+    .required('Required'),
+  phone: Yup.string()
+    .required('Required')
+    .matches(/^((8|\+7)[- ]?)?(\(?\d{3}\)?[- ]?)?[\d- ]{7,10}$/, 'Invalid phone number'),
+  email: Yup.string().email('Invalid email').required('Required'),
+  team_id: Yup.string().required('Required'),
+})
+
+const increaseFields: IFormFields[] = [
   {
-    name: 'name',
+    name: 'project_id',
     type: 'text',
-    label: 'Name*',
+    label: 'Project Id*',
   },
   {
-    name: 'description',
+    name: 'dayToAdd',
     type: 'text',
-    label: 'Description',
+    label: 'day to add*',
   },
-  {
-    name: 'client_name',
-    type: 'text',
-    label: 'Client name*',
-  },
-  {
-    name: 'client_surname',
-    type: 'text',
-    label: 'Client surname*',
-  },
-  {
-    name: 'phone',
-    type: 'text',
-    label: 'Phone*',
-  },
-  {
-    name: 'email',
-    type: 'email',
-    label: 'Email*',
-  },
-  {
-    name: 'team_id',
-    type: 'text',
-    label: 'Team ID*',
-  },
-  // TODO: Date start from DateNow()
 ]
+
+const increaseValidSchema = Yup.object().shape({
+  project_id: Yup.number().required('Required'),
+  dayToAdd: Yup.number().required('Required'),
+})
 
 export interface IProject {
   id: number
@@ -63,90 +62,68 @@ export interface ICreateProjectFields extends IProjectWithoutId, IClientWithoutI
 }
 
 const Projects = () => {
-  const [projects, setProjects] = useState<IProject[]>([])
-  const [client, setClient] = useState<IClient | null>(null)
-  const { setIsOpen } = useContext(IsOpenModalContext)
+  const {
+    projects,
+    client,
+    isLoading,
+    projectInputFields,
+    editFields,
+    getClient,
+    createNewProject,
+    removeProject,
+    editProject,
+    fieldsEditProject,
+    increaseDueDate,
+  } = useProjects()
+  const { isOpen, setIsOpen } = useContext(IsOpenModalContext)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/projects')
-        const data = await response.json()
-        setProjects(data)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      }
-    }
-
-    fetchData()
-  }, [])
-
-  const getClientById = async (id: number) => {
-    try {
-      const response = await fetch(`http://localhost:3000/client/project/${id}`)
-      const data = await response.json()
-
-      setClient(data[0])
-    } catch (error) {
-      console.error('Error fetching data:', error)
-    }
-
-    setIsOpen(true)
-  }
-
-  const createProject = async (values: IInitialValue) => {
-    await fetch('http://localhost:3000/project/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(values),
+  const handleGetClientById = async (id: number) => {
+    await getClient(id)
+    setIsOpen({
+      base: true,
+      edit: false,
     })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok')
-        }
-        console.log(response)
-        return response.json()
-      })
-      .then(data => {
-        console.log('Success:', data)
-      })
-      .catch(error => {
-        console.error('Error:', error)
-      })
   }
 
-  const deleteProject = async (id: number) => {
-    try {
-      await fetch(`http://localhost:3000/project/delete/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      setProjects(prevProjects => prevProjects.filter(project => project.id !== id))
-    } catch (error) {
-      console.error('Error:', error)
-    }
+  const handleEditProject = async (values: IInitialValue) => {
+    await editProject(values)
   }
+
+  const handleFieldsEditProject = useCallback(
+    async (id: number) => {
+      await fieldsEditProject(id)
+      setIsOpen({ base: false, edit: true })
+    },
+    [fieldsEditProject, setIsOpen]
+  )
+
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <Layout>
       <div className='flex gap-5'>
-        <MyForm
-          fields={fields}
-          onSubmit={createProject}
-        />
-        <div className='grid grid-cols-3 gap-5'>
+        <div className='flex flex-col gap-10'>
+          <MyForm
+            fields={projectInputFields}
+            onSubmit={createNewProject}
+            ValidationSchema={ProjectValidSchema}
+          />
+          <MyForm
+            fields={increaseFields}
+            onSubmit={increaseDueDate}
+            ValidationSchema={increaseValidSchema}
+          />
+        </div>
+
+        <div className='grid grid-cols-3 gap-5 w-full'>
           {projects.length ? (
             projects.map(project => (
               <div key={project.id}>
                 <ProjectContainer
                   project={project}
-                  getClientById={getClientById}
-                  deleteProject={deleteProject}
+                  getClientById={handleGetClientById}
+                  deleteProject={removeProject}
+                  handleEditProject={handleFieldsEditProject}
                 />
               </div>
             ))
@@ -154,16 +131,30 @@ const Projects = () => {
             <h2 className='mx-auto'>No projects found :(</h2>
           )}
         </div>
-        <BaseModal>
-          {client === null ? (
-            ''
-          ) : (
-            <ClientContainer
-              client={client}
-              withBtn={false}
-            />
-          )}
-        </BaseModal>
+        {isOpen.base ? (
+          <BaseModal>
+            {client === null ? (
+              ''
+            ) : (
+              <ClientContainer
+                client={client}
+                withBtn={false}
+              />
+            )}
+          </BaseModal>
+        ) : (
+          <BaseModal>
+            <div className='bg-white p-4 rounded-md'>
+              <h3 className='flex justify-center mb-3 text-lg'> Editor </h3>
+              <MyForm
+                fields={projectInputFields}
+                onSubmit={handleEditProject}
+                ValidationSchema={ProjectValidSchema}
+                editFields={editFields}
+              />
+            </div>
+          </BaseModal>
+        )}
       </div>
     </Layout>
   )

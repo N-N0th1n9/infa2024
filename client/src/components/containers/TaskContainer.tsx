@@ -42,20 +42,22 @@ const TaskContainer: FC<ITaskContainer> = ({
         </span>
       </div>
       <div className='flex items-center justify-between mt-3'>
-        {withBtn && (
-          <>
-            <Button
-              text='Project'
-              type='button'
-              handlerClick={() => getProjectById?.(task.id)}
-            />
-            <Button
-              text='Employee'
-              type='button'
-              handlerClick={() => getEmployeeById?.(task.id)}
-            />
-          </>
-        )}
+        <div className='flex gap-3'>
+          {withBtn && (
+            <>
+              <Button
+                text='Project'
+                type='button'
+                handlerClick={() => getProjectById?.(task.id)}
+              />
+              <Button
+                text='Employee'
+                type='button'
+                handlerClick={() => getEmployeeById?.(task.id)}
+              />
+            </>
+          )}
+        </div>
         <div className='flex gap-4'>
           <Link to='/client/edit/:id'>
             <MdModeEdit size={27} />

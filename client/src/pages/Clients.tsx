@@ -3,9 +3,9 @@ import Button from '../components/UI/Button'
 import ClientContainer from '../components/containers/ClientContainer'
 import Layout from '../components/containers/Layout'
 import ProjectContainer from '../components/containers/ProjectContainer'
+import { useClient } from '../hooks/useClient'
 import { IsOpenModalContext } from '../providers/modalProvider'
-import { IProject } from './Projects'
-import { useContext, useEffect, useState } from 'react'
+import { useContext } from 'react'
 import { Link } from 'react-router-dom'
 
 export interface IClient {
@@ -17,68 +17,51 @@ export interface IClient {
 }
 
 const Clients = () => {
-  const [clients, setClients] = useState<IClient[]>([])
-  const [project, setProject] = useState<IProject | null>(null)
+  const {
+    clients,
+    project,
+    isLoading,
+    // error
+    getProject,
+    removeClient,
+  } = useClient()
   const { setIsOpen } = useContext(IsOpenModalContext)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/clients')
-        const data = await response.json()
-        setClients(data)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      }
-    }
-
-    fetchData()
-  }, [])
-
-  const getProjectById = async (id: number) => {
-    try {
-      const response = await fetch(`http://localhost:3000/project/client/${id}`)
-      const data = await response.json()
-
-      setProject(data[0])
-    } catch (error) {
-      console.error('Error fetching data:', error)
-    }
-    setIsOpen(true)
+  const handleGetProjectById = async (id: number) => {
+    await getProject(id)
+    setIsOpen({
+      base: true,
+      edit: false,
+    })
   }
 
-  const deleteClient = async (id: number) => {
-    try {
-      await fetch(`http://localhost:3000/client/delete/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      setClients(prevClients => prevClients.filter(client => client.id !== id))
-    } catch (error) {
-      console.error('Error:', error)
-    }
+  const handleDeleteClient = async (id: number) => {
+    await removeClient(id)
   }
+
+  if (isLoading) return <div>Loading...</div>
+  // if (error) return <div>Error: {error.message}</div>;
 
   return (
     <Layout>
       <div className='flex gap-5'>
-        <Link to='/projects'>
+        <Link
+          to='/projects'
+          className='w-[250px] *:w-full'
+        >
           <Button
             text='Create new project'
             type='button'
           />
         </Link>
-        <div className='flex flex-col gap-5'>
+        <div className='flex flex-col gap-5 w-full'>
           {clients.length ? (
             clients.map(client => (
               <div key={client.id}>
                 <ClientContainer
                   client={client}
-                  getProjectById={getProjectById}
-                  deleteClient={deleteClient}
+                  getProjectById={handleGetProjectById}
+                  deleteClient={handleDeleteClient}
                 />
               </div>
             ))

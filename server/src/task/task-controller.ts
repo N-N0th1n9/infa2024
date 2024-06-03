@@ -108,3 +108,22 @@ export const deleteTask = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+export const increaseDueDate = async (req, res) => {
+  const { projectId, daysToAdd } = req.body
+
+  try {
+    const result = await sequelize.query(
+      `CALL increase_due_date(:projectId, :daysToAdd)`,
+      {
+        replacements: { projectId, daysToAdd },
+        type: QueryTypes.RAW,
+      }
+    )
+
+    res.status(200).json({ message: 'Due date increased successfully' })
+  } catch (error) {
+    console.error('Error calling stored procedure:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}

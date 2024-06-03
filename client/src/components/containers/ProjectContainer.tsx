@@ -9,6 +9,7 @@ interface IClientContainer {
   withBtn?: boolean
   getClientById?: (id: number) => void
   deleteProject?: (id: number) => void
+  handleEditProject?: (id: number) => void
 }
 
 //TODO: надо что-то придумать с deleteProject для модалки.
@@ -18,6 +19,7 @@ const ProjectContainer: FC<IClientContainer> = ({
   withBtn = true,
   getClientById,
   deleteProject,
+  handleEditProject,
 }) => {
   return (
     <div className='border border-gray-400 bg-white shadow-mainShadow rounded-lg px-4 py-2 h-full flex justify-between flex-col'>
@@ -44,7 +46,7 @@ const ProjectContainer: FC<IClientContainer> = ({
       <div className='flex items-center justify-between mt-3'>
         {withBtn ? (
           <Button
-            text='Go to client'
+            text='Client'
             type='button'
             handlerClick={() => getClientById?.(project.id)}
           />
@@ -52,14 +54,11 @@ const ProjectContainer: FC<IClientContainer> = ({
           ''
         )}
         <div className='flex gap-4'>
-          <button>
+          <button onClick={() => handleEditProject?.(project.id)}>
             <MdModeEdit size={27} />
           </button>
-          <button>
-            <MdDelete
-              size={27}
-              onClick={() => deleteProject?.(project.id)}
-            />
+          <button onClick={() => deleteProject?.(project.id)}>
+            <MdDelete size={27} />
           </button>
         </div>
       </div>

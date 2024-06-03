@@ -79,6 +79,7 @@ export const createProject = async (req, res) => {
       description,
       client_name,
       client_surname,
+      date_end,
       phone,
       email,
       team_id,
@@ -86,9 +87,9 @@ export const createProject = async (req, res) => {
 
     // Создание нового проекта
     const [projectResult] = await sequelize.query(
-      `INSERT INTO project (name, description, date_start) VALUES (:name, :description, CURRENT_DATE) RETURNING id`,
+      `INSERT INTO project (name, description, date_start, date_end) VALUES (:name, :description, CURRENT_DATE, :date_end) RETURNING id`,
       {
-        replacements: { name, description },
+        replacements: { name, description, date_end },
         type: QueryTypes.INSERT,
         transaction,
       }
@@ -148,6 +149,105 @@ export const createProject = async (req, res) => {
   }
 }
 
+export const updateProject = async (req, res) => {
+  const transaction = await sequelize.transaction()
+  try {
+    const {
+      name,
+      description,
+      date_end,
+      client_name,
+      client_surname,
+      phone,
+      email,
+      team_id,
+    } = req.body
+
+    const projectId = req.params.id
+
+    await sequelize.query(
+      `UPDATE project SET name = :name, description = :description, date_end = :date_end WHERE id = :projectId`,
+      {
+        replacements: { name, description, date_end, projectId },
+        type: QueryTypes.UPDATE,
+        transaction,
+      }
+    )
+
+    const clientIdResults: { id: number }[] = await sequelize.query(
+      `SELECT client.id
+      FROM client 
+      JOIN project_client ON project_client.client_id = client.id  
+      WHERE project_client.project_id = ${projectId}`,
+      {
+        replacements: { projectId },
+        type: QueryTypes.SELECT,
+        transaction,
+      }
+    )
+
+    const clientId = clientIdResults[0].id
+
+    await sequelize.query(
+      `UPDATE client SET name = :client_name, surname = :client_surname, phone = :phone, email = :email WHERE id = :clientId`,
+      {
+        replacements: {
+          client_name,
+          client_surname,
+          phone,
+          email,
+          clientId,
+        },
+        type: QueryTypes.UPDATE,
+        transaction,
+      }
+    )
+
+    if (team_id) {
+      await sequelize.query(
+        `DELETE FROM project_team WHERE project_id = :projectId`,
+        {
+          replacements: { projectId },
+          type: QueryTypes.DELETE,
+          transaction,
+        }
+      )
+
+      await sequelize.query(
+        `INSERT INTO project_team (project_id, team_id) VALUES (:projectId, :team_id)`,
+        {
+          replacements: { projectId, team_id },
+          type: QueryTypes.INSERT,
+          transaction,
+        }
+      )
+    }
+
+    await transaction.commit()
+
+    res.status(200).json({
+      message: 'Project updated successfully',
+      project: {
+        id: projectId,
+        name,
+        description,
+        date_end,
+      },
+      client: {
+        id: clientId,
+        name: client_name,
+        surname: client_surname,
+        phone,
+        email,
+      },
+    })
+  } catch (error) {
+    await transaction.rollback()
+    console.error('Error updating project with client and team:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
 export const deleteProject = async (req, res) => {
   const transaction = await sequelize.transaction()
   try {
@@ -191,6 +291,25 @@ export const deleteProject = async (req, res) => {
   } catch (error) {
     await transaction.rollback()
     console.error('Error deleting project:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const increaseDueDate = async (req, res) => {
+  const { projectId, daysToAdd } = req.body
+
+  try {
+    const result = await sequelize.query(
+      `CALL increase_due_date(:projectId, :daysToAdd)`,
+      {
+        replacements: { projectId, daysToAdd },
+        type: QueryTypes.RAW,
+      }
+    )
+
+    res.status(200).json({ message: 'Due date increased successfully' })
+  } catch (error) {
+    console.error('Error calling stored procedure:', error)
     res.status(500).json({ error: 'Internal server error' })
   }
 }
